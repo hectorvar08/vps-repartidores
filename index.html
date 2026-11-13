@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>VPS Ventas</title>
+<meta name="theme-color" content="#0b0b0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VPS Ventas">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icono-180.png">
+<link rel="icon" href="icono-192.png">
+<style>
+  :root { --oro:#d0ab6e; --oro2:#f1d9a6; --fondo:#0b0b0f; --tarjeta:#16161d; --linea:#2a2a33; --texto:#f2efe8; --suave:#9a978f; --verde:#4caf7a; --rojo:#e0605a; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; background:var(--fondo); color:var(--texto); font-family:-apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { min-height:100vh; padding:calc(16px + env(safe-area-inset-top)) 16px 40px; max-width:520px; margin:0 auto; }
+  h1 { font-size:22px; margin:6px 0 2px; letter-spacing:.5px; }
+  .marca { color:var(--oro); font-weight:700; letter-spacing:3px; font-size:13px; text-align:center; margin:4px 0 14px; }
+  .suave { color:var(--suave); font-size:14px; }
+  .pantalla { display:none; animation:entra .2s ease; }
+  .pantalla.activa { display:block; }
+  @keyframes entra { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+  .caja { background:var(--tarjeta); border:1px solid var(--linea); border-radius:16px; padding:16px; margin:12px 0; }
+  .grande { font-size:34px; font-weight:700; color:var(--oro2); }
+  .fila { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  button { font:inherit; color:inherit; border:none; cursor:pointer; }
+  .btn { width:100%; padding:18px; border-radius:14px; font-size:18px; font-weight:700; background:var(--oro); color:#1a1408; margin-top:10px; }
+  .btn:active { transform:scale(.98); }
+  .btn.gris { background:var(--tarjeta); color:var(--texto); border:1px solid var(--linea); font-weight:600; }
+  .btn:disabled { opacity:.5; }
+  .rejilla { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .op { background:var(--tarjeta); border:1px solid var(--linea); border-radius:14px; padding:16px 10px; font-size:16px; font-weight:600; min-height:64px; text-align:center; }
+  .op:active, .op.sel { border-color:var(--oro); background:#221d14; }
+  .op small { display:block; color:var(--oro); font-weight:500; margin-top:4px; }
+  .uno { grid-template-columns:1fr; }
+  .atras { background:none; color:var(--suave); font-size:15px; padding:6px 0; }
+  .paso { color:var(--oro); font-size:13px; letter-spacing:1px; text-transform:uppercase; margin-top:8px; }
+  .venta { padding:12px 0; border-top:1px solid var(--linea); }
+  .venta:first-child { border-top:none; }
+  .pend { color:var(--suave); font-style:italic; }
+  .com { color:var(--verde); font-weight:700; }
+  input { width:100%; font:inherit; font-size:22px; padding:14px; border-radius:12px; border:1px solid var(--linea); background:#0f0f14; color:var(--texto); margin-top:10px; }
+  input:focus { outline:none; border-color:var(--oro); }
+  .puntos { display:flex; justify-content:center; gap:14px; margin:20px 0; }
+  .puntos span { width:16px; height:16px; border-radius:50%; border:2px solid var(--oro); }
+  .puntos span.lleno { background:var(--oro); }
+  .teclado { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .teclado button { background:var(--tarjeta); border:1px solid var(--linea); border-radius:14px; padding:18px 0; font-size:24px; font-weight:600; }
+  .teclado button:active { background:#221d14; }
+  .aviso { position:fixed; left:16px; right:16px; bottom:20px; max-width:488px; margin:0 auto; padding:16px; border-radius:14px; font-weight:600; text-align:center; display:none; z-index:9; }
+  .aviso.ok { background:var(--verde); color:#06210f; }
+  .aviso.mal { background:var(--rojo); color:#2a0606; }
+  .deshacer { background:#2a2116; border:1px solid var(--oro); border-radius:14px; padding:14px; margin:12px 0; }
+  .deshacer button { background:var(--oro); color:#1a1408; border-radius:10px; padding:10px 14px; font-weight:700; }
+  .cargando { text-align:center; padding:60px 0; color:var(--suave); }
+  .resumen div { padding:6px 0; }
+  .resumen b { color:var(--oro2); }
+  .guardando { color:var(--oro); font-size:13px; }
+  .sin-guardar { color:var(--rojo); font-size:13px; font-weight:600; }
+  .estado { text-align:center; font-size:13px; color:var(--suave); min-height:18px; margin-top:12px; }
+  .dos { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .red { text-align:center; font-size:13px; font-weight:600; border-radius:10px; padding:8px 10px; margin:0 0 10px; display:none; }
+  .red.sin { display:block; background:#2a1a10; color:#f0b27a; border:1px solid #5a3a20; }
+  .red.sube { display:block; background:#14211a; color:#8fd6ae; border:1px solid #24402f; }
+  .error-venta { color:var(--rojo); font-size:13px; font-weight:600; text-align:right; }
+  .tag-dia { color:var(--oro); font-size:12px; }
+  .instalar { background:#1d1a14; border:1px dashed var(--oro); border-radius:14px; padding:12px 14px; font-size:14px; color:var(--oro2); margin:0 0 12px; display:none; }
+  .dos label { color:var(--suave); font-size:14px; display:block; margin-top:12px; }
+</style>
+</head>
+<body>
+  <div class="marca">VPS · VAPESCREW</div>
+  <div class="red" id="red"></div>
+  <div class="instalar" id="instalar">📲 Para que abra sin internet: toca <b>Compartir</b> (el cuadrito con flecha) y luego <b>"Agregar a pantalla de inicio"</b>. Usa la app desde ese ícono.</div>
+
+  <div id="p-cargando" class="pantalla"><div class="cargando" id="cargando-txt">Entrando…</div></div>
+
+  <!-- Entrar -->
+  <div id="p-nombre" class="pantalla">
+    <h1>¿Quién eres?</h1>
+    <div class="suave">Escoge tu nombre</div>
+    <div id="nombres" class="rejilla uno"></div>
+  </div>
+
+  <div id="p-pin" class="pantalla">
+    <button class="atras" onclick="ir('p-nombre')">‹ Cambiar nombre</button>
+    <h1 id="pin-titulo">Tu PIN</h1>
+    <div class="suave">Escribe tus 4 números</div>
+    <div class="puntos" id="puntos"><span></span><span></span><span></span><span></span></div>
+    <div class="teclado" id="teclado"></div>
+    <div class="estado" id="pin-estado"></div>
+  </div>
+
+  <!-- Inicio -->
+  <div id="p-inicio" class="pantalla">
+    <div class="fila">
+      <h1 id="hola">Hola</h1>
+      <button class="atras" onclick="actualizar(true)">↻</button>
+    </div>
+    <div class="suave" id="dia"></div>
+    <div class="caja">
+      <div class="fila">
+        <div><div class="suave">Ventas de hoy</div><div class="grande" id="n-ventas">0</div></div>
+        <div style="text-align:right"><div class="suave">Tu comisión</div><div class="grande" id="comision">$0</div></div>
+      </div>
+      <div class="suave" id="pendientes" style="margin-top:6px"></div>
+    </div>
+    <div id="caja-deshacer"></div>
+    <button class="btn" onclick="nuevaVenta()">➕ ANOTAR VENTA</button>
+    <div class="caja">
+      <div class="paso" style="margin:0 0 6px">Mis ventas de hoy</div>
+      <div id="lista"></div>
+      <button class="atras" style="margin-top:8px" onclick="garantiaOtroDia()">🛠 Garantía de una venta de otro día</button>
+    </div>
+    <button class="atras" onclick="salir()">Cerrar sesión</button>
+  </div>
+
+  <!-- Venta -->
+  <div id="p-modelo" class="pantalla">
+    <button class="atras" onclick="ir('p-inicio')">‹ Cancelar</button>
+    <h1>¿Qué modelo?</h1>
+    <div id="modelos" class="rejilla"></div>
+  </div>
+
+  <div id="p-sabor" class="pantalla">
+    <button class="atras" onclick="ir('p-modelo')">‹ Atrás</button>
+    <h1 id="sabor-titulo">¿Qué sabor?</h1>
+    <div id="sabores" class="rejilla"></div>
+  </div>
+
+  <div id="p-precio" class="pantalla">
+    <button class="atras" onclick="ir('p-sabor')">‹ Atrás</button>
+    <h1>Precio</h1>
+    <div id="precio-normal"></div>
+    <div id="precio-otro" style="display:none">
+      <div class="suave">¿En cuánto se vendió?</div>
+      <input id="precio-input" type="number" inputmode="numeric" placeholder="$">
+      <button class="btn" onclick="precioOtro()">Continuar</button>
+    </div>
+  </div>
+
+  <div id="p-pago" class="pantalla">
+    <button class="atras" onclick="ir('p-precio')">‹ Atrás</button>
+    <h1>¿Cómo pagó?</h1>
+    <div id="pagos" class="rejilla uno"></div>
+  </div>
+
+  <div id="p-mixto" class="pantalla">
+    <button class="atras" onclick="ir('p-pago')">‹ Atrás</button>
+    <h1>¿Cuánto de cada uno?</h1>
+    <div class="suave" id="mixto-total"></div>
+    <div class="dos">
+      <div><label>💵 Efectivo</label><input id="efe-input" type="number" inputmode="numeric" placeholder="$" oninput="completar('efe')"></div>
+      <div><label>🏦 Transferencia</label><input id="tra-input" type="number" inputmode="numeric" placeholder="$" oninput="completar('tra')"></div>
+    </div>
+    <button class="btn" onclick="seguirMixto()">Continuar</button>
+  </div>
+
+  <div id="p-origen" class="pantalla">
+    <button class="atras" id="origen-atras">‹ Atrás</button>
+    <h1>¿De dónde vino?</h1>
+    <div id="origenes" class="rejilla"></div>
+    <div id="caja-cliente" style="display:none">
+      <div class="suave" style="margin-top:18px">¿Qué cliente fue?</div>
+      <input id="cliente-input" type="text" placeholder="Nombre o apodo y colonia" style="font-size:18px">
+      <button class="btn gris" onclick="$('cliente-input').value='Cliente nuevo'">Es cliente nuevo</button>
+    </div>
+    <button class="btn" onclick="seguirOrigen()">Continuar</button>
+  </div>
+
+  <div id="p-confirmar" class="pantalla">
+    <button class="atras" id="confirmar-atras">‹ Atrás</button>
+    <h1>¿Todo bien?</h1>
+    <div class="caja resumen" id="resumen"></div>
+    <button class="btn" onclick="registrar()">✅ REGISTRAR VENTA</button>
+  </div>
+
+  <!-- Garantía -->
+  <div id="p-venta" class="pantalla">
+    <button class="atras" onclick="ir('p-inicio')">‹ Atrás</button>
+    <h1>Venta</h1>
+    <div class="caja resumen" id="venta-info"></div>
+    <div id="venta-gar"></div>
+  </div>
+
+  <div id="p-elige" class="pantalla">
+    <button class="atras" id="elige-atras">‹ Atrás</button>
+    <div class="paso">Garantía</div>
+    <h1 id="elige-titulo"></h1>
+    <div class="suave" id="elige-sub"></div>
+    <div id="elige-ops" class="rejilla"></div>
+    <div id="elige-otra" style="display:none">
+      <input id="otra-input" type="text" placeholder="Escribe la falla" style="font-size:18px">
+      <button class="btn" onclick="gOtraSeguir()">Seguir</button>
+    </div>
+  </div>
+
+  <div id="p-gconfirmar" class="pantalla">
+    <button class="atras" id="gconf-atras">‹ Atrás</button>
+    <h1>Revisa la garantía</h1>
+    <div class="caja resumen" id="gresumen"></div>
+    <div class="suave">La pieza que entregaste se descuenta del stock y no cuenta como venta.</div>
+    <button class="btn" id="g-boton" onclick="enviarGarantia()">🛠 REGISTRAR GARANTÍA</button>
+  </div>
+
+  <div class="aviso" id="aviso"></div>
+
+<script>
+  // Las ventas llegan a la hoja por aquí (la misma app de Google de siempre).
+  var API = 'https://script.google.com/macros/s/AKfycbw93muixDqToQ7X2G6NCKz020r1G3JASLhWXQUcJ0r5RvyMHYUZiUU_IbQ3ia-FCJbW2w/exec';
+  var DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  var CAT = null;
+  var S = { nombre:null, pin:null, hoy:null, venta:{}, pinTmp:'', timer:null, enviando:false, reintento:null };
+
+  // ---- Memoria del celular ----
+  function leer(k, def) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } }
+  function guardar(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function borrar(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  // Ventas que todavía no llegan a la hoja (se reintentan solas).
+  function cola() { return leer('vps-cola', []); }
+  function guardarCola(c) { guardar('vps-cola', c); pintarRed(); }
+  function misPendientes() { return cola().filter(function (v) { return v.nombre === S.nombre; }); }
+
+  // El día del negocio cambia a las 5 am (igual que la hoja).
+  function diaDe(ms) { var d = new Date(ms - 5 * 3600 * 1000); return DIAS[d.getDay()] + ' ' + d.getDate(); }
+  function diaHoy() { return diaDe(Date.now()); }
+
+  function $(id) { return document.getElementById(id); }
+  function ir(id) {
+    document.querySelectorAll('.pantalla').forEach(function (p) { p.classList.remove('activa'); });
+    $(id).classList.add('activa'); window.scrollTo(0, 0);
+  }
+  function dinero(n) { return '$' + Number(n || 0).toLocaleString('es-MX'); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+  function aviso(txt, ok) {
+    var a = $('aviso'); a.textContent = txt; a.className = 'aviso ' + (ok ? 'ok' : 'mal'); a.style.display = 'block';
+    clearTimeout(a._t); a._t = setTimeout(function () { a.style.display = 'none'; }, ok ? 2000 : 4000);
+  }
+  function msg(e) { return String((e && e.message) || e).replace(/^Error: /, ''); }
+  // Errores que vienen de la app (no de internet): no tiene caso reintentar.
+  function esDeLaApp(e) { return !!(e && e.deLaApp); }
+  function llamar(fn, args, ok, mal) {
+    mal = mal || function (e) { aviso(msg(e), false); };
+    if (navigator.onLine === false) { setTimeout(function () { mal(new Error('Sin internet')); }, 0); return; }
+    var ctl = window.AbortController ? new AbortController() : null;
+    var t = setTimeout(function () { if (ctl) ctl.abort(); }, 30000);
+    fetch(API, { method:'POST', body:JSON.stringify({ fn:fn, args:args }), redirect:'follow', signal:ctl ? ctl.signal : undefined })
+      .then(function (res) { return res.text(); })
+      .then(function (txt) {
+        clearTimeout(t);
+        var j; try { j = JSON.parse(txt); } catch (x) { return null; }
+        return j;
+      }, function () { clearTimeout(t); return null; })
+      .then(function (j) {
+        // Fuera del try de internet: un error al pintar no debe confundirse con "sin señal".
+        if (!j) { pintarRed(false); mal(new Error('Sin internet')); }
+        else if (j.ok) { pintarRed(true); ok(j.r); }
+        else { var e = new Error(j.error); e.deLaApp = true; mal(e); }
+      });
+  }
+  // Aviso arriba: sin señal / ventas por subir.
+  var EN_LINEA = true;
+  function pintarRed(enLinea) {
+    if (enLinea === true || enLinea === false) EN_LINEA = enLinea;
+    if (navigator.onLine === false) EN_LINEA = false;
+    var r = $('red'); if (!r || !S.nombre) { if (r) r.className = 'red'; return; }
+    var n = misPendientes().length;
+    if (!EN_LINEA) { r.className = 'red sin'; r.textContent = '📵 Sin señal · ' + (n ? (n === 1 ? '1 venta guardada en tu cel' : n + ' ventas guardadas en tu cel') + ', se suben solas' : 'puedes seguir anotando'); }
+    else if (n) { r.className = 'red sube'; r.textContent = '⏫ Subiendo ' + (n === 1 ? '1 venta' : n + ' ventas') + '…'; }
+    else r.className = 'red';
+  }
+
+  // ---- Arranque: sin esperar a Google si ya entró antes ----
+  function arrancar() {
+    CAT = leer('vps-cat', null);
+    var standalone = window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    if (!standalone && /iPhone|iPad|iPod/.test(navigator.userAgent)) $('instalar').style.display = 'block';
+    if (!CAT) {
+      ir('p-cargando'); $('cargando-txt').textContent = 'Cargando…';
+      llamar('catalogo', [], function (c) { CAT = c; guardar('vps-cat', c); arrancar(); },
+        function () { $('cargando-txt').innerHTML = 'La primera vez necesitas internet para abrir la app.<br><br><button class="btn" onclick="arrancar()">Intentar de nuevo</button>'; });
+      return;
+    }
+    pintarNombres();
+    var g = leer('vps-rep', null);
+    if (g && g.nombre && g.pin) {
+      S.nombre = g.nombre; S.pin = g.pin;
+      var hoy = leer('vps-hoy', null);
+      // Ya entró antes: abre luego luego, aunque no haya señal.
+      S.hoy = hoy && hoy.nombre === g.nombre ? hoy : null;
+      pintarHoy(); ir('p-inicio');
+      actualizar(false);
+    } else ir('p-nombre');
+  }
+  function pintarNombres() {
+    $('nombres').innerHTML = CAT.nombres.map(function (n, i) {
+      return '<button class="op" onclick="escoger(' + i + ')">' + esc(n) + '</button>';
+    }).join('');
+  }
+  function escoger(i) {
+    S.nombre = CAT.nombres[i]; S.pinTmp = ''; pintarPuntos(); $('pin-estado').textContent = '';
+    $('pin-titulo').textContent = 'Hola ' + S.nombre + ', tu PIN'; ir('p-pin');
+  }
+  (function () {
+    var t = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
+    $('teclado').innerHTML = t.map(function (k) {
+      return k === '' ? '<span></span>' : '<button onclick="tecla(\'' + k + '\')">' + k + '</button>';
+    }).join('');
+  })();
+  function pintarPuntos() {
+    document.querySelectorAll('#puntos span').forEach(function (s, i) { s.classList.toggle('lleno', i < S.pinTmp.length); });
+  }
+  function tecla(k) {
+    if (S.pinTmp.length === 4) return;
+    if (k === '⌫') S.pinTmp = S.pinTmp.slice(0, -1); else S.pinTmp += k;
+    pintarPuntos();
+    if (S.pinTmp.length < 4) return;
+    var pin = S.pinTmp;
+    $('pin-estado').textContent = 'Revisando…';
+    llamar('inicio', [S.nombre, pin], function (r) {
+      S.pin = pin; guardar('vps-rep', { nombre:S.nombre, pin:pin });
+      recibir(r); ir('p-inicio'); enviarCola();
+    }, function (e) {
+      S.pinTmp = ''; pintarPuntos(); $('pin-estado').textContent = '';
+      aviso(esDeLaApp(e) ? msg(e) : 'Para entrar la primera vez necesitas internet', false);
+    });
+  }
+  function salir() {
+    if (cola().length && !confirm('Hay ventas que todavía no se guardan. ¿Salir de todos modos?')) return;
+    borrar('vps-rep'); borrar('vps-hoy'); S.nombre = S.pin = S.hoy = null; pintarRed(); ir('p-nombre');
+  }
+
+  // ---- Inicio ----
+  function recibir(r) {
+    if (r.cat) { CAT = r.cat; guardar('vps-cat', CAT); }
+    S.hoy = r.hoy; S.hoy.nombre = S.nombre;
+    if (S.hoy.deshacer) S.hoy.deshacer.fin = Date.now() + S.hoy.deshacer.segundos * 1000;
+    guardar('vps-hoy', S.hoy); pintarHoy();
+  }
+  function actualizar(avisar) {
+    if (!S.nombre) return;
+    llamar('inicio', [S.nombre, S.pin], function (r) {
+      recibir(r);
+      if ($('p-cargando').classList.contains('activa')) ir('p-inicio');
+      if (avisar) aviso('Actualizado', true);
+      enviarCola();
+    }, function (e) {
+      if (esDeLaApp(e) && /PIN incorrecto/.test(msg(e))) {
+        if (misPendientes().length) { aviso('Tu PIN cambió. Pídele el nuevo a Héctor; tus ventas siguen guardadas.', false); return; }
+        aviso('Tu PIN cambió, vuelve a entrar', false); borrar('vps-rep'); borrar('vps-hoy'); ir('p-nombre');
+      }
+      else if (avisar) aviso(esDeLaApp(e) ? msg(e) : 'Sin internet. Tus ventas se guardan en el cel.', false);
+    });
+  }
+  function pintarHoy() {
+    var hoyDia = diaHoy();
+    var h = S.hoy && S.hoy.dia === hoyDia ? S.hoy : { dia:hoyDia, ventas:[], comision:0, pendientes:0, deshacer:S.hoy && S.hoy.deshacer };
+    var pend = misPendientes();
+    var pendHoy = pend.filter(function (v) { return (v.dia || hoyDia) === hoyDia; });
+    var lista = h.ventas.map(function (v) { return { v:v }; })
+      .concat(pend.map(function (v) { return { v:v, local:true, falla:v.falla, error:v.error, otroDia:v.dia && v.dia !== hoyDia }; }));
+    $('hola').textContent = 'Hola, ' + S.nombre + ' 👋';
+    $('dia').textContent = 'Hoy: ' + hoyDia;
+    $('n-ventas').textContent = h.ventas.length + pendHoy.length;
+    $('comision').textContent = dinero(h.comision);
+    var np = h.pendientes + pendHoy.length;
+    $('pendientes').textContent = np ? (np === 1 ? '1 venta con comisión pendiente' : np + ' ventas con comisión pendiente') : '';
+    $('lista').innerHTML = lista.length ? lista.slice().reverse().map(function (x) {
+      var v = x.v, der;
+      if (x.local && x.error) der = '<div class="error-venta" onclick="ventaConError(\'' + v.id + '\')">No se guardó ⚠️<br><span class="suave">tócala</span></div>';
+      else if (x.local) der = x.falla || !EN_LINEA ? '<div class="sin-guardar" onclick="enviarCola(true)">📵 En tu cel<br><span class="suave">se sube sola</span></div>' : '<div class="guardando">subiendo…</div>';
+      else der = v.comision === null ? '<div class="pend">pendiente</div>' : '<div class="com">' + dinero(v.comision) + '</div>';
+      var toca = !x.local && v.fila ? ' style="cursor:pointer" onclick="abrirVentaRep(' + v.fila + ')"' : '';
+      return '<div class="venta fila"' + toca + '><div><b>' + esc(v.modelo) + '</b>' + (x.otroDia ? ' <span class="tag-dia">' + esc(v.dia) + '</span>' : '') + '<div class="suave">' + esc(v.sabor) + ' · ' + dinero(v.precio) + '</div>' +
+        (v.garantia ? '<div class="guardando">🛠 Garantía · ' + esc(v.garantia.falla) + '</div>' : '') + '</div>' + der + '</div>';
+    }).join('') : '<div class="suave">Todavía no tienes ventas hoy.</div>';
+    pintarDeshacer(); pintarRed();
+  }
+  // Una venta que la hoja rechazó (ej. el día no existe): se puede reintentar o borrar, nunca se pierde sola.
+  function ventaConError(id) {
+    var v = cola().filter(function (x) { return x.id === id; })[0];
+    if (!v) return;
+    if (confirm('No se guardó: ' + v.error + '\n\n' + v.modelo + ' · ' + v.sabor + ' · ' + dinero(v.precio) + '\n\n¿Reintentar? (Cancelar = opciones para borrarla)')) {
+      var c = cola(); c.forEach(function (x) { if (x.id === id) delete x.error; }); guardarCola(c); pintarHoy(); enviarCola(true);
+    } else if (confirm('¿Borrar esta venta del cel? Solo si ya se la pasaste a Héctor.')) {
+      guardarCola(cola().filter(function (x) { return x.id !== id; })); pintarHoy();
+    }
+  }
+  function pintarDeshacer() {
+    clearInterval(S.timer);
+    var caja = $('caja-deshacer'), d = S.hoy && S.hoy.deshacer;
+    if (!d) { caja.innerHTML = ''; return; }
+    function tic() {
+      var s = Math.max(0, Math.round((d.fin - Date.now()) / 1000));
+      if (!s) { clearInterval(S.timer); caja.innerHTML = ''; S.hoy.deshacer = null; return; }
+      caja.innerHTML = '<div class="deshacer fila"><div><div class="suave">¿Te equivocaste?</div><b>' + esc(d.modelo) + ' · ' + esc(d.sabor) + '</b></div>' +
+        '<button onclick="deshacer()">Deshacer ' + Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2) + '</button></div>';
+    }
+    tic(); S.timer = setInterval(tic, 1000);
+  }
+  function deshacer() {
+    var d = S.hoy.deshacer;
+    if (!d || !confirm('¿Borrar esta venta?')) return;
+    // Si todavía no llegaba a la hoja, se quita y ya.
+    var c = cola(), k = c.findIndex(function (v) { return v.id === d.id; });
+    if (k >= 0 && !S.enviando) { c.splice(k, 1); guardarCola(c); S.hoy.deshacer = null; pintarHoy(); aviso('Venta borrada', true); return; }
+    S.hoy.deshacer = null; pintarDeshacer();
+    llamar('deshacer', [S.nombre, S.pin, d.id], function (r) { recibir(r); aviso('Venta borrada', true); },
+      function (e) { S.hoy.deshacer = d; pintarDeshacer(); aviso(msg(e), false); });
+  }
+
+  // ---- Nueva venta ----
+  function nuevaVenta() {
+    S.venta = {};
+    $('modelos').innerHTML = CAT.modelos.map(function (m, i) {
+      return '<button class="op" onclick="escogerModelo(' + i + ')">' + esc(m.nombre) + (m.precio ? '<small>' + dinero(m.precio) + '</small>' : '') + '</button>';
+    }).join('');
+    ir('p-modelo');
+  }
+  function escogerModelo(i) {
+    var m = CAT.modelos[i]; S.venta.m = m; S.venta.modelo = m.nombre;
+    $('sabor-titulo').textContent = m.nombre + ': ¿qué sabor?';
+    $('sabores').innerHTML = m.sabores.map(function (s, j) {
+      return '<button class="op" onclick="escogerSabor(' + j + ')">' + esc(s) + '</button>';
+    }).join('');
+    ir('p-sabor');
+  }
+  function escogerSabor(j) {
+    var m = S.venta.m; S.venta.sabor = m.sabores[j];
+    $('precio-input').value = '';
+    if (m.precio) {
+      $('precio-normal').innerHTML = '<button class="btn" onclick="precioNormal()">' + dinero(m.precio) + ' · Precio normal</button>' +
+        '<button class="btn gris" onclick="mostrarOtro()">Hubo descuento</button>';
+      $('precio-normal').style.display = 'block'; $('precio-otro').style.display = 'none';
+    } else {
+      $('precio-normal').style.display = 'none'; $('precio-otro').style.display = 'block';
+    }
+    ir('p-precio');
+  }
+  function mostrarOtro() { $('precio-normal').style.display = 'none'; $('precio-otro').style.display = 'block'; $('precio-input').focus(); }
+  function precioNormal() { S.venta.precio = S.venta.m.precio; S.venta.descuento = false; pedirPago(); }
+  function precioOtro() {
+    var p = Math.round(Number($('precio-input').value));
+    if (!(p > 0)) { aviso('Escribe el precio', false); return; }
+    S.venta.precio = p; S.venta.descuento = !!S.venta.m.precio && p !== S.venta.m.precio; pedirPago();
+  }
+  function pedirPago() {
+    $('pagos').innerHTML = CAT.pagos.map(function (p, i) {
+      return '<button class="op" onclick="escogerPago(' + i + ')">' + esc(p) + '</button>';
+    }).join('');
+    ir('p-pago');
+  }
+  function escogerPago(i) {
+    var v = S.venta; v.pago = CAT.pagos[i]; v.efectivo = v.transferencia = '';
+    if (v.pago === CAT.mixto) {
+      $('mixto-total').textContent = 'Total de la venta: ' + dinero(v.precio);
+      $('efe-input').value = ''; $('tra-input').value = '';
+      ir('p-mixto'); $('efe-input').focus();
+    } else pedirOrigen('p-pago');
+  }
+  function completar(cual) {
+    var t = S.venta.precio, a = $(cual + '-input'), b = $(cual === 'efe' ? 'tra-input' : 'efe-input');
+    var n = Math.round(Number(a.value));
+    b.value = a.value === '' ? '' : (n >= 0 && n <= t ? t - n : '');
+  }
+  function seguirMixto() {
+    var v = S.venta, e = Math.round(Number($('efe-input').value)), t = Math.round(Number($('tra-input').value));
+    if ($('efe-input').value === '' || $('tra-input').value === '' || e < 0 || t < 0 || e + t !== v.precio) {
+      aviso('Efectivo + transferencia debe dar ' + dinero(v.precio), false); return;
+    }
+    v.efectivo = e; v.transferencia = t; pedirOrigen('p-mixto');
+  }
+  function pedirOrigen(atras) {
+    if (!CAT.origenes.length) { $('confirmar-atras').onclick = function () { ir(atras); }; pintarResumen(); ir('p-confirmar'); return; }
+    $('origen-atras').onclick = function () { ir(atras); };
+    $('cliente-input').value = ''; $('caja-cliente').style.display = 'none'; S.venta.origen = '';
+    $('origenes').innerHTML = CAT.origenes.map(function (o, k) {
+      return '<button class="op" onclick="escogerOrigen(' + k + ')">' + esc(o) + '</button>';
+    }).join('');
+    $('confirmar-atras').onclick = function () { ir('p-origen'); };
+    ir('p-origen');
+  }
+  function escogerOrigen(k) {
+    S.venta.origen = CAT.origenes[k];
+    document.querySelectorAll('#origenes .op').forEach(function (b, i) { b.classList.toggle('sel', i === k); });
+    var wa = S.venta.origen === 'WhatsApp';
+    $('caja-cliente').style.display = wa ? 'block' : 'none';
+    if (wa) $('cliente-input').focus();
+  }
+  function seguirOrigen() {
+    var v = S.venta;
+    if (!v.origen) { aviso('Escoge de dónde vino', false); return; }
+    v.cliente = v.origen === 'WhatsApp' ? $('cliente-input').value.trim() : '';
+    if (v.origen === 'WhatsApp' && !v.cliente) { aviso('Escribe qué cliente fue', false); return; }
+    pintarResumen(); ir('p-confirmar');
+  }
+  function pintarResumen() {
+    var v = S.venta;
+    $('resumen').innerHTML =
+      '<div>Modelo: <b>' + esc(v.modelo) + '</b></div><div>Sabor: <b>' + esc(v.sabor) + '</b></div>' +
+      '<div>Precio: <b>' + dinero(v.precio) + '</b>' + (v.descuento ? ' (con descuento)' : '') + '</div>' +
+      '<div>Pago: <b>' + esc(v.pago) + '</b></div>' +
+      (v.pago === CAT.mixto ? '<div>💵 <b>' + dinero(v.efectivo) + '</b> efectivo · 🏦 <b>' + dinero(v.transferencia) + '</b> transferencia</div>' : '') +
+      (v.origen ? '<div>Vino de: <b>' + esc(v.origen) + '</b></div>' : '') +
+      (v.cliente ? '<div>Cliente: <b>' + esc(v.cliente) + '</b></div>' : '');
+  }
+
+  // Registrar: regresa luego luego al inicio y se guarda por detrás.
+  function registrar() {
+    var v = S.venta;
+    var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    var item = { id:id, nombre:S.nombre, modelo:v.modelo, sabor:v.sabor, precio:v.precio, descuento:v.descuento,
+                 pago:v.pago, efectivo:v.efectivo, transferencia:v.transferencia, origen:v.origen || '', cliente:v.cliente || '',
+                 ts:Date.now(), dia:diaHoy() };
+    var c = cola(); c.push(item); guardarCola(c);
+    if (!S.hoy) S.hoy = { dia:diaHoy(), ventas:[], comision:0, pendientes:0 };
+    S.hoy.deshacer = { id:id, modelo:v.modelo, sabor:v.sabor, fin:Date.now() + CAT.segDeshacer * 1000 };
+    pintarHoy(); ir('p-inicio'); aviso(EN_LINEA && navigator.onLine !== false ? '¡Venta anotada!' : '¡Anotada! Se sube cuando haya señal', true);
+    enviarCola();
+  }
+  function enviarCola(manual) {
+    if (S.enviando || !S.pin) return;
+    clearTimeout(S.reintento);
+    var c = misPendientes().filter(function (v) { return !v.error; });
+    if (!c.length) return;
+    S.enviando = true;
+    var item = c[0];
+    llamar('registrar', [S.nombre, S.pin, item], function (r) {
+      S.enviando = false;
+      guardarCola(cola().filter(function (v) { return v.id !== item.id; }));
+      var d = S.hoy && S.hoy.deshacer;
+      recibir(r);
+      if (d && d.id !== item.id) { S.hoy.deshacer = d; pintarDeshacer(); }   // el deshacer es de otra venta más nueva
+      else if (d && S.hoy.deshacer) { S.hoy.deshacer.fin = d.fin; pintarDeshacer(); }
+      else { S.hoy.deshacer = null; pintarDeshacer(); }                      // ya había pasado o lo quitaron
+      enviarCola();
+    }, function (e) {
+      S.enviando = false;
+      var q = cola();
+      if (esDeLaApp(e) && /intentos|PIN/.test(msg(e))) {
+        // Problema de PIN: se queda guardada y se reintenta más tarde.
+        S.reintento = setTimeout(function () { enviarCola(); }, 60000);
+        if (manual) aviso(msg(e), false);
+      } else if (esDeLaApp(e)) {
+        // La hoja la rechazó: se queda en el cel marcada para que la revise (no se pierde).
+        q.forEach(function (v) { if (v.id === item.id) v.error = msg(e); }); guardarCola(q);
+        if (S.hoy && S.hoy.deshacer && S.hoy.deshacer.id === item.id) S.hoy.deshacer = null;
+        pintarHoy(); aviso('No se guardó: ' + msg(e), false);
+        enviarCola();
+      } else {
+        q.forEach(function (v) { if (v.id === item.id) v.falla = true; }); guardarCola(q); pintarHoy();
+        if (manual) aviso('Sin señal. Se sube sola cuando regrese.', false);
+        S.reintento = setTimeout(function () { enviarCola(); }, 15000);
+      }
+    });
+  }
+  // ---- Garantías ----
+  var GR = null;
+  function catGar() {
+    if (!CAT.fallas) CAT.fallas = ['No prende', 'No jala', 'Sabe a quemado', 'Fuga de líquido', 'Se descargó rápido', 'Otra'];
+    if (!CAT.todos) CAT.todos = CAT.modelos;
+  }
+  function abrirVentaRep(fila) {
+    var v = (S.hoy.ventas || []).filter(function (x) { return x.fila === fila; })[0];
+    if (!v) return;
+    $('venta-info').innerHTML = '<div>Modelo: <b>' + esc(v.modelo) + '</b></div><div>Sabor: <b>' + esc(v.sabor) + '</b></div><div>Precio: <b>' + dinero(v.precio) + '</b></div><div>Pago: <b>' + esc(v.pago) + '</b></div>';
+    $('venta-gar').innerHTML = v.garantia
+      ? '<div class="caja"><b>🛠 Ya tiene garantía</b><div class="suave">' + esc(v.garantia.falla) + ' · se cambió por ' + esc(v.garantia.mEnt) + ' ' + esc(v.garantia.sEnt) + '</div></div>'
+      : '<button class="btn gris" onclick="garantiaDeVenta(' + fila + ')">🛠 GARANTÍA</button><div class="suave" style="margin-top:8px">Úsalo si el cliente te dijo que le salió mala y se la cambiaste.</div>';
+    ir('p-venta');
+  }
+  function elige(titulo, sub, ops, fn, atras) {
+    $('elige-titulo').textContent = titulo; $('elige-sub').textContent = sub || '';
+    $('elige-otra').style.display = 'none';
+    $('elige-ops').innerHTML = ops.map(function (o, i) { return '<button class="op" onclick="' + fn + '(' + i + ')">' + esc(o) + '</button>'; }).join('') ||
+      '<div class="suave">No hay sabores con piezas.</div>';
+    $('elige-atras').onclick = atras;
+    ir('p-elige');
+  }
+  function garantiaDeVenta(fila) {
+    catGar();
+    var v = S.hoy.ventas.filter(function (x) { return x.fila === fila; })[0];
+    GR = { fila:fila, modelo:v.modelo, sabor:v.sabor, desde:function () { abrirVentaRep(fila); } };
+    pedirFalla();
+  }
+  function garantiaOtroDia() {
+    catGar();
+    GR = { fila:0, desde:function () { ir('p-inicio'); } };
+    elige('¿Qué vape salió malo?', 'Escoge el modelo', CAT.todos.map(function (m) { return m.nombre; }), 'gMaloModelo', function () { ir('p-inicio'); });
+  }
+  function gMaloModelo(i) {
+    var m = CAT.todos[i]; GR.modelo = m.nombre; GR.mTodos = m;
+    elige(m.nombre + ': ¿qué sabor salió malo?', '', m.sabores, 'gMaloSabor', garantiaOtroDia);
+  }
+  function gMaloSabor(i) { GR.sabor = GR.mTodos.sabores[i]; GR.desde = function () { gMaloModelo(CAT.todos.indexOf(GR.mTodos)); }; pedirFalla(); }
+  function pedirFalla() {
+    elige('¿Qué falla tuvo?', GR.modelo + ' · ' + GR.sabor, CAT.fallas, 'gFalla', GR.desde);
+  }
+  function gFalla(i) {
+    var f = CAT.fallas[i];
+    if (f === 'Otra') {
+      $('elige-ops').innerHTML = ''; $('elige-otra').style.display = 'block'; $('otra-input').value = ''; $('otra-input').focus();
+      $('elige-titulo').textContent = '¿Qué falla tuvo?';
+      return;
+    }
+    GR.falla = f; pedirCambio();
+  }
+  function gOtraSeguir() {
+    var f = $('otra-input').value.trim();
+    if (!f) { aviso('Escribe la falla', false); return; }
+    GR.falla = f; pedirCambio();
+  }
+  function pedirCambio() {
+    elige('¿Por cuál se lo cambiaste?', 'Escoge el modelo que le entregaste', CAT.modelos.map(function (m) { return m.nombre; }), 'gCambioModelo', pedirFalla);
+  }
+  function gCambioModelo(i) {
+    var m = CAT.modelos[i]; GR.mEnt = m.nombre; GR.mCambio = m;
+    elige(m.nombre + ': ¿qué sabor le diste?', '', m.sabores, 'gCambioSabor', pedirCambio);
+  }
+  function gCambioSabor(i) {
+    GR.sEnt = GR.mCambio.sabores[i];
+    $('gresumen').innerHTML = '<div>Salió malo: <b>' + esc(GR.modelo) + ' · ' + esc(GR.sabor) + '</b></div><div>Falla: <b>' + esc(GR.falla) + '</b></div>' +
+      '<div>Se lo cambiaste por: <b>' + esc(GR.mEnt) + ' · ' + esc(GR.sEnt) + '</b></div>';
+    $('gconf-atras').onclick = function () { gCambioModelo(CAT.modelos.indexOf(GR.mCambio)); };
+    $('g-boton').disabled = false; $('g-boton').textContent = '🛠 REGISTRAR GARANTÍA';
+    ir('p-gconfirmar');
+  }
+  function enviarGarantia() {
+    var b = $('g-boton'); b.disabled = true; b.textContent = 'Guardando…';
+    llamar('registrarGarantia', [S.nombre, S.pin, { fila:GR.fila, modelo:GR.modelo, sabor:GR.sabor, falla:GR.falla, mEnt:GR.mEnt, sEnt:GR.sEnt }], function (r) {
+      recibir(r); ir('p-inicio'); aviso('¡Garantía registrada!', true);
+    }, function (e) {
+      b.disabled = false; b.textContent = '🛠 REGISTRAR GARANTÍA';
+      aviso(esDeLaApp(e) ? msg(e) : 'Las garantías necesitan internet. Intenta cuando tengas señal.', false);
+    });
+  }
+
+  window.addEventListener('online', function () { pintarRed(true); enviarCola(); });
+  window.addEventListener('offline', function () { pintarRed(false); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && S.nombre) { pintarHoy(); enviarCola(); } });
+  setInterval(function () { if (S.nombre && !document.hidden) { pintarHoy(); enviarCola(); } }, 60000);
+
+  // Guarda la app en el cel para que abra sin internet.
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+
+  arrancar();
+</script>
+</body>
+</html>
